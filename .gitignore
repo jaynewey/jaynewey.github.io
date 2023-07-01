@@ -1,0 +1,9 @@
+/target
+
+# railwind generated css
+railwind.css
+
+# built app
+/dist
+
+/.cargo

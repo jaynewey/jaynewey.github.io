@@ -1,0 +1,4 @@
+[[hooks]]
+stage = "pre_build"
+command = "bash"
+command_arguments = ["./scripts/css.sh", "railwind.css"]

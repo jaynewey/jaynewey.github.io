@@ -1,0 +1,10 @@
+(
+    content: [
+        "index.html",
+				"src/**/*.rs",
+    ],
+		extend_collection_options: Some({
+				"rs": Html
+		}),
+		darkMode: "class"
+)

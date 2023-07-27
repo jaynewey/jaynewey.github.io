@@ -70,6 +70,13 @@ pub fn Projects(cx: Scope) -> impl IntoView {
                     repo=Some("https://github.com/jaynewey/charm-icons")
                 />
                 <Project
+                    name="Gust"
+                    date="2023"
+                    info="an open source weather application, written with rust and leptos"
+                    link=Some("https://jaynewey.github.io/gust")
+                    repo=Some("https://github.com/jaynewey/gust")
+                />
+                <Project
                     name="Bubbles"
                     date="2020"
                     info="bubbles is a simple particle system library for python programs"

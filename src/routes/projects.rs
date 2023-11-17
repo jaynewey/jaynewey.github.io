@@ -52,7 +52,7 @@ pub fn Projects(cx: Scope) -> impl IntoView {
                     name="CodeSpecs"
                     date="2022 - 2023"
                     info="made for my university dissertation, a full-stack web application written with typescript which leverages the debug adapter protocol to produce animated visualisations of real code"
-                    link=Some("https://codespecs.tech")
+                    link=Some("http://codespecs.shah.fyi")
                     repo=None
                 />
                 <Project

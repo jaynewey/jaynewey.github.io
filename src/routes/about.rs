@@ -48,9 +48,11 @@ pub fn About(cx: Scope) -> impl IntoView {
                         </Location>
                         <h3 class="font-bold mt-6 mb-2">"experience"</h3>
                         <Location icon=ChBriefcase.into() name="Vodafone UK" date="2019 - Present">
-                            <h4 class="text-lg">"Insights & Data Analyst Intern"</h4>
+                            <h4 class="text-lg">"Big Data QA Engineer"</h4>
+                            <h5 class="opacity-75 mb-6">"2023 - Present"</h5>
+                            <h4 class="text-lg">"Insights & Data Analyst"</h4>
                             <h5 class="opacity-75 mb-6">"2022"</h5>
-                            <h4 class="text-lg">"Network Analytics Specialist"</h4>
+                            <h4 class="text-lg">"Network Data Analyst"</h4>
                             <h5 class="opacity-75">"2019"</h5>
                         </Location>
                     </div>

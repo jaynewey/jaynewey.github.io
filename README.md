@@ -37,3 +37,21 @@ rustywind src
 ```sh
 cargo clippy
 ```
+
+### Notes
+
+#### glTF Compression
+
+The islands model has been compressed using [`gltfpack`](https://meshoptimizer.org/gltf/) using:
+
+```sh
+gltfpack -vtf -i islands.gltf -o islands.glb
+```
+
+To make use of the compression, I am patching in extra `gltf` extensions implemented in [this pull request](https://github.com/gltf-rs/gltf/pull/463).
+
+We make use of the `KHR_mesh_quantization` extension which saves considerable space but disable
+`KHR_texture_transform` as the implementation above does not seem to consider both transforms.
+
+We could save more space by enabling `EXT_meshopt_compression` however I haven't been able to get it working with the above.
+

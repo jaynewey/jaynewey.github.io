@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 leptos = { version = "0.8.15", features = ["csr"] }
-three-d = { git = "https://github.com/asny/three-d" }
-three-d-asset = { git = "https://github.com/asny/three-d-asset", features = ["data-url", "http", "gltf", "image", "vol"] }
+three-d = { version = "0.18.2" }
+three-d-asset = { version = "0.9.2", features = ["data-url", "http", "gltf", "image", "vol", "png"] }
 regex = { version = "1.8.1", optional = true }
 web-sys = { version = "0.3.62", features = ["Window", "Storage", "Document", "Location", "Element", "IntersectionObserver", "IntersectionObserverInit", "IntersectionObserverEntry", "History", "ScrollRestoration", "EventTarget"] }
 wasm-bindgen = "0.2.85"
@@ -24,6 +24,11 @@ console_log = "0.2"
 wasm-bindgen-futures = "0.4"
 console_error_panic_hook = "0.1"
 
-[dev-dependencies]
-clippy = "0.0.302"
+[dependencies.gltf]
+version = "*"
+features = ["KHR_materials_ior", "KHR_materials_transmission", "KHR_mesh_quantization"]
+
+[patch.crates-io]
+# using fork with KHR_mesh_quantization implemented
+gltf = { git = "https://github.com/gltf-rs/gltf", rev = "refs/pull/463/head" }
 

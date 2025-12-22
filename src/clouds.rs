@@ -15,7 +15,7 @@ pub async fn get_clouds(context: &Context, paths: &[&str]) -> Vec<Gm<Sprites, Co
                 .unwrap();
             let cloud = cloud_assets.deserialize(name).unwrap();
             let material = ColorMaterial {
-                color: Color::WHITE,
+                color: Srgba::WHITE,
                 texture: Some(std::sync::Arc::new(Texture2D::new(context, &cloud)).into()),
                 is_transparent: true,
                 render_states: RenderStates {
@@ -37,7 +37,7 @@ pub async fn get_clouds(context: &Context, paths: &[&str]) -> Vec<Gm<Sprites, Co
                 })
                 .collect();
             let mut sprites = Sprites::new(context, &cloud_positions, None);
-            sprites.set_transformation(Matrix4::from_scale(30.0));
+            sprites.set_transformation(Matrix4::from_scale(rng.gen_range(20.0..50.0)));
 
             Gm {
                 geometry: sprites,

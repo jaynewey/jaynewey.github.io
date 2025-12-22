@@ -1,18 +1,17 @@
-use leptos::*;
-use icondata_ch::ChIcon::{ChMail, ChGithub, ChBriefcase};
-use leptos_icons::*;
-
+use icondata::{ChBriefcase, ChGithub, ChMail};
+use leptos::prelude::*;
+use leptos_icons::Icon;
 
 #[component]
-pub fn Link(cx: Scope, icon: IconData, text: &'static str, link: &'static str) -> impl IntoView {
-    view! { cx,
+pub fn Link(icon: icondata::Icon, text: &'static str, link: &'static str) -> impl IntoView {
+    view! {
         <a
             href=link
             target="_blank"
             class="flex shrink backdrop-blur-md rounded-lg transition hover:scale-110 active:scale-105 opacity-75 hover:opacity-100"
         >
             <div class="flex items-center m-6 gap-x-6">
-                <Icon class="shrink-0" icon=icon width="24" height="24"/>
+                <Icon icon={icon} width="24" height="24" {..} class="shrink-0"/>
                 <h4 class="text-lg md:text-xl mb-2 break-all">{text}</h4>
             </div>
         </a>
@@ -20,8 +19,8 @@ pub fn Link(cx: Scope, icon: IconData, text: &'static str, link: &'static str) -
 }
 
 #[component]
-pub fn Contact(cx: Scope) -> impl IntoView {
-    view! { cx,
+pub fn Contact() -> impl IntoView {
+    view! {
         <div class="h-screen w-full snap-start flex flex-col lg:flex-row">
             <div class="lg:flex lg:w-1/2 lg:mr-6 p-6">
                 <h2 class="font-bold text-6xl lg:text-8xl m-auto">"contact"</h2>

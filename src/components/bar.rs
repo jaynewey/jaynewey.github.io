@@ -1,12 +1,12 @@
-use leptos::*;
+use leptos::prelude::*;
 
 use crate::components::logo::Logo;
-use crate::routes::Link;
 use crate::components::theme_button::ThemeButton;
+use crate::routes::Link;
 
 #[component]
-pub fn Bar(cx: Scope) -> impl IntoView {
-    view! { cx,
+pub fn Bar() -> impl IntoView {
+    view! {
         <div class="sticky top-0 p-6 h-screen hidden sm:flex flex-col text-center">
             <Link path="/">
                 <Logo/>

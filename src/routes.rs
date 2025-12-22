@@ -3,24 +3,22 @@ pub mod contact;
 pub mod home;
 pub mod projects;
 
-use leptos::*;
+use leptos::html;
+use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
 
 use crate::scene;
 use std::sync::mpsc;
 
 #[component]
-pub fn Router(cx: Scope, children: Children) -> impl IntoView {
-    let (current_path, set_current_path) = create_signal(
-        cx,
-        if let Some(window) = web_sys::window() {
-            window.location().pathname().unwrap_or(String::from("/"))
-        } else {
-            String::from("/")
-        },
-    );
+pub fn Router(children: Children) -> impl IntoView {
+    let (current_path, set_current_path) = signal(if let Some(window) = web_sys::window() {
+        window.location().pathname().unwrap_or(String::from("/"))
+    } else {
+        String::from("/")
+    });
 
-    provide_context(cx, (current_path, set_current_path));
+    provide_context((current_path, set_current_path));
 
     if let Some(window) = web_sys::window() {
         if let Ok(history) = window.history() {
@@ -28,7 +26,7 @@ pub fn Router(cx: Scope, children: Children) -> impl IntoView {
         }
     }
 
-    create_effect(cx, move |_| {
+    Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
             if let Ok(history) = window.history() {
                 let _ = history.replace_state_with_url(
@@ -40,27 +38,26 @@ pub fn Router(cx: Scope, children: Children) -> impl IntoView {
         }
     });
 
-    children(cx)
+    children()
 }
 
 #[component]
-pub fn Route(cx: Scope, path: &'static str, children: Children) -> impl IntoView {
-    let div_element: NodeRef<html::Div> = create_node_ref(cx);
-    let path_ = path.clone();
+pub fn Route(path: &'static str, children: Children) -> impl IntoView {
+    let div_element: NodeRef<html::Div> = NodeRef::new();
 
-    let (_, set_current_path) = use_context::<(ReadSignal<String>, WriteSignal<String>)>(cx)
+    let (_, set_current_path) = use_context::<(ReadSignal<String>, WriteSignal<String>)>()
         .expect("to find the path context");
 
-    let (current_path, _) = use_context::<(ReadSignal<String>, WriteSignal<String>)>(cx)
+    let (current_path, _) = use_context::<(ReadSignal<String>, WriteSignal<String>)>()
         .expect("to find the path context");
 
     let sender =
-        use_context::<mpsc::Sender<scene::SceneStateMessage>>(cx).expect("to find the sender");
+        use_context::<mpsc::Sender<scene::SceneStateMessage>>().expect("to find the sender");
 
-    create_effect(cx, move |_| {
+    Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
             if let Some(element) = div_element.get() {
-                if window.location().pathname().unwrap_or(String::from("/")) == path_ {
+                if window.location().pathname().unwrap_or(String::from("/")) == path {
                     let element_ = element.clone();
                     // HACK: use request_animation_frame to wait for mount
                     request_animation_frame(move || {
@@ -78,7 +75,7 @@ pub fn Route(cx: Scope, path: &'static str, children: Children) -> impl IntoView
                                 entry.dyn_ref::<web_sys::IntersectionObserverEntry>()
                             {
                                 if entry.is_intersecting() {
-                                    set_current_path(String::from(path));
+                                    set_current_path.set(String::from(path));
                                     let _ = sender.send(scene::SceneStateMessage::SetCurrentPath(
                                         String::from(path),
                                     ));
@@ -88,8 +85,8 @@ pub fn Route(cx: Scope, path: &'static str, children: Children) -> impl IntoView
                     }
                 });
 
-                let mut observer_options = web_sys::IntersectionObserverInit::new();
-                observer_options.threshold(&JsValue::from_f64(0.5));
+                let observer_options = web_sys::IntersectionObserverInit::new();
+                observer_options.set_threshold(&JsValue::from_f64(0.5));
 
                 if let Ok(observer) = web_sys::IntersectionObserver::new_with_options(
                     action.as_ref().unchecked_ref(),
@@ -102,21 +99,21 @@ pub fn Route(cx: Scope, path: &'static str, children: Children) -> impl IntoView
         }
     });
 
-    view! { cx,
+    view! {
         <div
-            ref=div_element
+            node_ref=div_element
             id=path
             class=("opacity-100", move || current_path.get() == path)
             class="opacity-25 transition duration-500"
         >
-            {children(cx)}
+            {children()}
         </div>
     }
 }
 
 #[component]
-pub fn Link(cx: Scope, path: &'static str, children: Children) -> impl IntoView {
-    let (current_path, _) = use_context::<(ReadSignal<String>, WriteSignal<String>)>(cx)
+pub fn Link(path: &'static str, children: Children) -> impl IntoView {
+    let (current_path, _) = use_context::<(ReadSignal<String>, WriteSignal<String>)>()
         .expect("to find the path context");
 
     let travel = move |_| {
@@ -131,7 +128,7 @@ pub fn Link(cx: Scope, path: &'static str, children: Children) -> impl IntoView 
 
     // TODO: write better regex so railwind doesn't need below
     // class="scale-110 opacity-50 opacity-100"
-    view! { cx,
+    view! {
         <a
             class=("scale-110", move || current_path.get() == path)
             class=("opacity-50", move || current_path.get() != path)
@@ -139,7 +136,7 @@ pub fn Link(cx: Scope, path: &'static str, children: Children) -> impl IntoView 
             class="cursor-pointer transition hover:scale-110 active:scale-105 hover:opacity-75"
             on:click=travel
         >
-            {children(cx)}
+            {children()}
         </a>
     }
 }

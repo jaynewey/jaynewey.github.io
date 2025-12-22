@@ -1,7 +1,7 @@
 use three_d::*;
 
-use crate::config;
 use crate::clouds;
+use crate::config;
 
 use std::sync::mpsc;
 
@@ -49,15 +49,13 @@ fn as_clear_state(Color { r, g, b, a }: Color) -> ClearState {
 fn slide(percentage: u32) {
     let web_window = web_sys::window().expect("to have window");
     if let Some(document) = web_window.document() {
-       if let Some(element) = document.get_element_by_id("loader-bar") {
-         let _ = element.set_attribute("style", format!("width: {}%;", percentage).as_str());
-       } 
+        if let Some(element) = document.get_element_by_id("loader-bar") {
+            let _ = element.set_attribute("style", format!("width: {}%;", percentage).as_str());
+        }
     }
 }
 
-pub async fn scene(
-    receiver: mpsc::Receiver<SceneStateMessage>,
-) {
+pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
     let mut theme = config::Theme::Light;
     let mut scene_state = SceneState {
         clear_state: as_clear_state(config::BACKGROUND_LIGHT),
@@ -126,12 +124,12 @@ pub async fn scene(
 
     let asset_prefix = option_env!("ASSET_PREFIX").unwrap_or("");
 
-    let mut loaded =
-        three_d_asset::io::load_async(
-            &[format!("{}assets/night_sky.png", asset_prefix).as_str(),
-              format!("{}assets/day_sky.png", asset_prefix).as_str()])
-            .await
-            .unwrap();
+    let mut loaded = three_d_asset::io::load_async(&[
+        format!("{}assets/night_sky.png", asset_prefix).as_str(),
+        format!("{}assets/day_sky.png", asset_prefix).as_str(),
+    ])
+    .await
+    .unwrap();
     let mut sphere = CpuMesh::sphere(32);
     let uvs: Vec<Vector2<f32>> = sphere
         .normals
@@ -161,33 +159,50 @@ pub async fn scene(
         animation: 0.0,
     };
 
-    let day_clouds = clouds::get_clouds(&context, &[
-        format!("{}assets/day_cloud_1.png", asset_prefix).as_str(),
-        format!("{}assets/day_cloud_2.png", asset_prefix).as_str(),
-        format!("{}assets/day_cloud_2.png", asset_prefix).as_str()
-    ]).await;
-    let night_clouds = clouds::get_clouds(&context, &[
-        format!("{}assets/night_cloud_1.png", asset_prefix).as_str(),
-        format!("{}assets/night_cloud_2.png", asset_prefix).as_str(),
-        format!("{}assets/night_cloud_3.png", asset_prefix).as_str()
-    ]).await;
+    let day_clouds = clouds::get_clouds(
+        &context,
+        &[
+            format!("{}assets/day_cloud_1.png", asset_prefix).as_str(),
+            format!("{}assets/day_cloud_2.png", asset_prefix).as_str(),
+            format!("{}assets/day_cloud_2.png", asset_prefix).as_str(),
+        ],
+    )
+    .await;
+    let night_clouds = clouds::get_clouds(
+        &context,
+        &[
+            format!("{}assets/night_cloud_1.png", asset_prefix).as_str(),
+            format!("{}assets/night_cloud_2.png", asset_prefix).as_str(),
+            format!("{}assets/night_cloud_3.png", asset_prefix).as_str(),
+        ],
+    )
+    .await;
 
     slide(75);
 
-    let island = load_model(&context, format!("{}assets/islands.glb", asset_prefix).as_str())
-        .await
-        .expect("to load island model");
+    let island = load_model(
+        &context,
+        format!("{}assets/islands.glb", asset_prefix).as_str(),
+    )
+    .await
+    .expect("to load island model");
 
     slide(100);
 
     // once we have loaded assets, remove the loader
     web_window = web_sys::window().expect("to have window");
     if let Some(document) = web_window.document() {
-       if let Some(element) = document.get_element_by_id("loader") {
-         element.set_class_name(format!("{} {}", element.class_name(), "opacity-0 pointer-events-none").as_str());
-       } 
+        if let Some(element) = document.get_element_by_id("loader") {
+            element.set_class_name(
+                format!(
+                    "{} {}",
+                    element.class_name(),
+                    "opacity-0 pointer-events-none"
+                )
+                .as_str(),
+            );
+        }
     }
-
 
     window.render_loop(move |frame_input| {
         let mut change = frame_input.first_frame;
@@ -211,7 +226,7 @@ pub async fn scene(
                                 ))
                                 .into(),
                             );
-                        },
+                        }
                         config::Theme::Dark => {
                             scene_state.clear_state = as_clear_state(config::BACKGROUND_DARK);
                             fog_effect.color = config::BACKGROUND_DARK;
@@ -225,7 +240,7 @@ pub async fn scene(
                                 ))
                                 .into(),
                             );
-                        },
+                        }
                     }
                     change = true;
                 }
@@ -236,12 +251,14 @@ pub async fn scene(
         let scroll = scroll.borrow_mut();
         let camera_position = camera.position();
         change |= (camera_position.y - *scroll).abs() > config::MIN_CHANGE;
-        if change {camera.zoom_towards(
-            &vec3(camera_position.x, *scroll, camera_position.z),
-            (camera_position.y - (*scroll)).abs() * config::MOVE_SPEED,
-            0.0,
-            1000.0,
-        );}
+        if change {
+            camera.zoom_towards(
+                &vec3(camera_position.x, *scroll, camera_position.z),
+                (camera_position.y - (*scroll)).abs() * config::MOVE_SPEED,
+                0.0,
+                1000.0,
+            );
+        }
 
         let lights: &[&dyn Light] = &[&ambient, &directional];
 
@@ -282,7 +299,7 @@ pub async fn scene(
             render_list.push(&skysphere);
             let clouds = match theme {
                 config::Theme::Light => &day_clouds,
-                config::Theme::Dark => &night_clouds
+                config::Theme::Dark => &night_clouds,
             };
             render_list.extend(clouds.iter().map(|m| m as &dyn Object));
             RenderTarget::new(

@@ -25,7 +25,7 @@ pub fn Contact() -> impl IntoView {
             <div class="lg:flex lg:w-1/2 lg:mr-6 p-6">
                 <h2 class="font-bold text-6xl lg:text-8xl m-auto">"contact"</h2>
             </div>
-            <div class="space-y-12 m-6 md:m-12 my-auto">
+            <div class="space-y-12 mx-6 md:mx-12 my-auto">
                 <Link
                     icon=ChMail.into()
                     text="jay.newey01@gmail.com"

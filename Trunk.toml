@@ -1,4 +1,8 @@
+[watch]
+watch = ["src"]
+
+[build]
 [[hooks]]
 stage = "pre_build"
-command = "bash"
-command_arguments = ["./scripts/css.sh", "railwind.css"]
+command = "tailwindcss"
+command_arguments = ["-i", "src/input.css", "-o", "tailwind.css"]

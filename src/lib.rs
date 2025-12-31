@@ -13,6 +13,7 @@ use crate::routes::*;
 
 pub mod clouds;
 pub mod config;
+pub mod effect;
 use crate::config::Theme;
 
 use leptos::prelude::*;

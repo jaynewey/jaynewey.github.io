@@ -1,7 +1,9 @@
+use leptos::leptos_dom::logging::console_log;
 use three_d::*;
 
 use crate::clouds;
 use crate::config;
+use crate::effect::FogEffect;
 
 use std::sync::mpsc;
 
@@ -36,7 +38,7 @@ pub struct Scene {
     pub lights: Vec<Box<dyn Light>>,
 }
 
-fn as_clear_state(Color { r, g, b, a }: Color) -> ClearState {
+fn as_clear_state(Srgba { r, g, b, a }: Srgba) -> ClearState {
     ClearState::color_and_depth(
         (r as f32) / 255.0,
         (g as f32) / 255.0,
@@ -53,6 +55,33 @@ fn slide(percentage: u32) {
             let _ = element.set_attribute("style", format!("width: {}%;", percentage).as_str());
         }
     }
+}
+
+//
+// Moves the camera towards the given point by the amount delta while keeping the given minimum and maximum distance to the point.
+//
+fn move_towards(
+    camera: &mut Camera,
+    point: &Vec3,
+    delta: f32,
+    minimum_distance: f32,
+    maximum_distance: f32,
+) {
+    let minimum_distance = minimum_distance.max(0.0);
+    assert!(
+        minimum_distance < maximum_distance,
+        "minimum_distance larger than maximum_distance"
+    );
+
+    let target = camera.target();
+    let camera_position = camera.position();
+    let distance = point.distance(camera_position);
+    let direction = (point - camera_position).normalize();
+    let up = camera.up();
+    let new_distance = (distance - delta).clamp(minimum_distance, maximum_distance);
+    let new_position = point - direction * new_distance;
+
+    camera.set_view(new_position, new_position + (target - camera_position), up);
 }
 
 pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
@@ -120,7 +149,7 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
     );
 
     let mut ambient = AmbientLight::new(&context, 0.4, config::SUN);
-    let mut directional = DirectionalLight::new(&context, 1.0, config::SUN, &vec3(0.0, -1.0, 0.0));
+    let mut directional = DirectionalLight::new(&context, 1.0, config::SUN, vec3(0.0, -1.0, 0.0));
 
     let asset_prefix = option_env!("ASSET_PREFIX").unwrap_or("");
 
@@ -142,7 +171,7 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
         })
         .collect();
     sphere.uvs = Some(uvs);
-    let _ = sphere.transform(&Matrix4::from_scale(750.0));
+    let _ = sphere.transform(Matrix4::from_scale(750.0));
     let mut skysphere = Gm::new(
         Mesh::new(&context, &sphere),
         ColorMaterial {
@@ -155,8 +184,9 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
 
     let mut fog_effect = FogEffect {
         color: config::BACKGROUND_LIGHT,
-        density: 0.006,
-        animation: 0.0,
+        near: 75.0,
+        far: 125.0,
+        ..Default::default()
     };
 
     let day_clouds = clouds::get_clouds(
@@ -204,6 +234,25 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
         }
     }
 
+    // main loop
+    let mut color_texture = Texture2D::new_empty::<[f16; 4]>(
+        &context,
+        camera.viewport().width,
+        camera.viewport().height,
+        Interpolation::Nearest,
+        Interpolation::Nearest,
+        None,
+        Wrapping::ClampToEdge,
+        Wrapping::ClampToEdge,
+    );
+    let mut depth_texture = DepthTexture2D::new::<f32>(
+        &context,
+        camera.viewport().width,
+        camera.viewport().height,
+        Wrapping::ClampToEdge,
+        Wrapping::ClampToEdge,
+    );
+
     window.render_loop(move |frame_input| {
         let mut change = frame_input.first_frame;
         change |= camera.set_viewport(frame_input.viewport);
@@ -216,6 +265,8 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
                         config::Theme::Light => {
                             scene_state.clear_state = as_clear_state(config::BACKGROUND_LIGHT);
                             fog_effect.color = config::BACKGROUND_LIGHT;
+                            fog_effect.near = 75.0;
+                            fog_effect.far = 125.0;
                             ambient.color = config::SUN;
                             directional.color = config::SUN;
                             directional.intensity = 4.0;
@@ -230,6 +281,8 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
                         config::Theme::Dark => {
                             scene_state.clear_state = as_clear_state(config::BACKGROUND_DARK);
                             fog_effect.color = config::BACKGROUND_DARK;
+                            fog_effect.near = 75.0;
+                            fog_effect.far = 115.0;
                             ambient.color = config::MOON;
                             directional.color = config::MOON;
                             directional.intensity = 2.0;
@@ -250,11 +303,17 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
 
         let scroll = scroll.borrow_mut();
         let camera_position = camera.position();
+
         change |= (camera_position.y - *scroll).abs() > config::MIN_CHANGE;
         if change {
-            camera.zoom_towards(
-                &vec3(camera_position.x, *scroll, camera_position.z),
-                (camera_position.y - (*scroll)).abs() * config::MOVE_SPEED,
+
+            let point = vec3(camera_position.x, *scroll, camera_position.z);
+            let delta = (camera_position.y - (*scroll)).abs() * config::MOVE_SPEED;
+
+            move_towards(
+                &mut camera,
+                &point,
+                delta,
                 0.0,
                 1000.0,
             );
@@ -264,36 +323,48 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
 
         let (x, y) = *position.borrow_mut();
         *(position.borrow_mut()) = (x * config::MOVE_RESISTANCE, y * config::MOVE_RESISTANCE);
+
+
         change |= x.abs() > config::MIN_CHANGE || y.abs() > config::MIN_CHANGE;
+
+        let camera_position = camera.position();
         let target = camera.target();
+        let camera_up = camera.up();
+
+        //console_log(format!("{:?}", camera.position_at_pixel((target.x, target.z))).as_str());
+
         camera.set_view(
-            *camera.position(),
+            camera_position,
             vec3(
                 target.x,
                 target.y + ((y * -config::PAN_FREEDOM) - target.y) * config::PAN_SPEED,
                 target.z + ((x * -config::PAN_FREEDOM) - target.z) * config::PAN_SPEED,
             ),
-            *camera.up(),
+            camera_up,
         );
 
         if change {
-            let mut color_texture = Texture2D::new_empty::<[u8; 4]>(
-                &context,
-                frame_input.viewport.width,
-                frame_input.viewport.height,
-                Interpolation::Nearest,
-                Interpolation::Nearest,
-                None,
-                Wrapping::ClampToEdge,
-                Wrapping::ClampToEdge,
-            );
-            let mut depth_texture = DepthTexture2D::new::<f32>(
-                &context,
-                frame_input.viewport.width,
-                frame_input.viewport.height,
-                Wrapping::ClampToEdge,
-                Wrapping::ClampToEdge,
-            );
+            if camera.viewport().width != color_texture.width()
+                || camera.viewport().height != color_texture.height()
+            {
+                color_texture = Texture2D::new_empty::<[f16; 4]>(
+                    &context,
+                    frame_input.viewport.width,
+                    frame_input.viewport.height,
+                    Interpolation::Nearest,
+                    Interpolation::Nearest,
+                    None,
+                    Wrapping::ClampToEdge,
+                    Wrapping::ClampToEdge,
+                );
+                depth_texture = DepthTexture2D::new::<f32>(
+                    &context,
+                    frame_input.viewport.width,
+                    frame_input.viewport.height,
+                    Wrapping::ClampToEdge,
+                    Wrapping::ClampToEdge,
+                );
+            }
             let mut render_list: Vec<&dyn Object> = Vec::new();
             render_list.extend(island.iter().map(|m| m as &dyn Object));
             render_list.push(&skysphere);
@@ -302,6 +373,8 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
                 config::Theme::Dark => &night_clouds,
             };
             render_list.extend(clouds.iter().map(|m| m as &dyn Object));
+
+            camera.disable_tone_and_color_mapping();
             RenderTarget::new(
                 color_texture.as_color_target(None),
                 depth_texture.as_depth_target(),
@@ -309,22 +382,16 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
             .clear(scene_state.clear_state)
             .render(&camera, render_list, lights);
 
+            camera.set_default_tone_and_color_mapping();
             frame_input
                 .screen()
-                .copy_from(
-                    ColorTexture::Single(&color_texture),
-                    DepthTexture::Single(&depth_texture),
-                    frame_input.viewport,
-                    WriteMask::default(),
-                )
-                .write(|| {
-                    fog_effect.apply(
-                        &context,
-                        frame_input.accumulated_time,
-                        &camera,
-                        DepthTexture::Single(&depth_texture),
-                    )
-                });
+                .apply_screen_effect(
+                    &fog_effect,
+                    &camera,
+                    &[],
+                    Some(ColorTexture::Single(&color_texture)),
+                    Some(DepthTexture::Single(&depth_texture)),
+                );
         }
 
         FrameOutput {

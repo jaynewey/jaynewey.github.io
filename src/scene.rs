@@ -1,7 +1,10 @@
-use leptos::leptos_dom::logging::console_log;
 use three_d::*;
 
-use crate::clouds;
+pub mod clouds;
+pub mod skysphere;
+pub mod utils;
+
+use utils::{load_model, as_clear_state, move_towards, slide};
 use crate::config;
 use crate::effect::FogEffect;
 
@@ -21,68 +24,11 @@ pub enum SceneStateMessage {
     SetCurrentPath(String),
 }
 
-pub async fn load_model(
-    context: &Context,
-    path: impl AsRef<std::path::Path>,
-) -> Option<Model<PhysicalMaterial>> {
-    let loaded = three_d_asset::io::load_and_deserialize_async(path)
-        .await
-        .ok()?;
-    let model = Model::<PhysicalMaterial>::new(context, &loaded).ok()?;
-
-    Some(model)
-}
-
 pub struct Scene {
     pub models: Vec<Model<PhysicalMaterial>>,
     pub lights: Vec<Box<dyn Light>>,
 }
 
-fn as_clear_state(Srgba { r, g, b, a }: Srgba) -> ClearState {
-    ClearState::color_and_depth(
-        (r as f32) / 255.0,
-        (g as f32) / 255.0,
-        (b as f32) / 255.0,
-        (a as f32) / 255.0,
-        1.0,
-    )
-}
-
-fn slide(percentage: u32) {
-    let web_window = web_sys::window().expect("to have window");
-    if let Some(document) = web_window.document() {
-        if let Some(element) = document.get_element_by_id("loader-bar") {
-            let _ = element.set_attribute("style", format!("width: {}%;", percentage).as_str());
-        }
-    }
-}
-
-//
-// Moves the camera towards the given point by the amount delta while keeping the given minimum and maximum distance to the point.
-//
-fn move_towards(
-    camera: &mut Camera,
-    point: &Vec3,
-    delta: f32,
-    minimum_distance: f32,
-    maximum_distance: f32,
-) {
-    let minimum_distance = minimum_distance.max(0.0);
-    assert!(
-        minimum_distance < maximum_distance,
-        "minimum_distance larger than maximum_distance"
-    );
-
-    let target = camera.target();
-    let camera_position = camera.position();
-    let distance = point.distance(camera_position);
-    let direction = (point - camera_position).normalize();
-    let up = camera.up();
-    let new_distance = (distance - delta).clamp(minimum_distance, maximum_distance);
-    let new_position = point - direction * new_distance;
-
-    camera.set_view(new_position, new_position + (target - camera_position), up);
-}
 
 pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
     let mut theme = config::Theme::Light;
@@ -148,8 +94,8 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
         1000.0,
     );
 
-    let mut ambient = AmbientLight::new(&context, 0.4, config::SUN);
-    let mut directional = DirectionalLight::new(&context, 1.0, config::SUN, vec3(0.0, -1.0, 0.0));
+    let mut ambient = AmbientLight::new(&context, 0.6, config::SUN);
+    let mut directional = DirectionalLight::new(&context, 0.4, config::SUN, vec3(0.0, -1.0, 0.0));
 
     let asset_prefix = option_env!("ASSET_PREFIX").unwrap_or("");
 
@@ -159,26 +105,8 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
     ])
     .await
     .unwrap();
-    let mut sphere = CpuMesh::sphere(32);
-    let uvs: Vec<Vector2<f32>> = sphere
-        .normals
-        .iter()
-        .flatten()
-        .map(|n| {
-            let u = n.x.atan2(n.z) / (2.0 * std::f32::consts::PI) + 0.5;
-            let v = n.y * 0.5 + 0.5;
-            Vector2::new(u, v)
-        })
-        .collect();
-    sphere.uvs = Some(uvs);
-    let _ = sphere.transform(Matrix4::from_scale(750.0));
-    let mut skysphere = Gm::new(
-        Mesh::new(&context, &sphere),
-        ColorMaterial {
-            texture: None,
-            ..Default::default()
-        },
-    );
+
+    let mut skysphere = skysphere::get_skysphere(&context);
 
     slide(60);
 
@@ -285,7 +213,7 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
                             fog_effect.far = 115.0;
                             ambient.color = config::MOON;
                             directional.color = config::MOON;
-                            directional.intensity = 2.0;
+                            directional.intensity = 3.0;
                             skysphere.material.texture = Some(
                                 std::sync::Arc::new(Texture2D::new(
                                     &context,
@@ -330,8 +258,6 @@ pub async fn scene(receiver: mpsc::Receiver<SceneStateMessage>) {
         let camera_position = camera.position();
         let target = camera.target();
         let camera_up = camera.up();
-
-        //console_log(format!("{:?}", camera.position_at_pixel((target.x, target.z))).as_str());
 
         camera.set_view(
             camera_position,

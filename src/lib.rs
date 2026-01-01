@@ -11,7 +11,6 @@ use crate::routes::home::*;
 use crate::routes::projects::*;
 use crate::routes::*;
 
-pub mod clouds;
 pub mod config;
 pub mod effect;
 use crate::config::Theme;

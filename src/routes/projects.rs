@@ -55,6 +55,13 @@ pub fn Projects() -> impl IntoView {
             </div>
             <div class="overflow-y-auto space-y-6 m-6 md:m-12">
                 <Project
+                    name="Ante 0"
+                    date="2026"
+                    info="ante 0 is a guessing game for jokers from the video game balatro, created using vue and typescript"
+                    link=Some("https://jaynewey.github.io/ante-0")
+                    repo=Some("https://github.com/jaynewey/ante-0")
+                />
+                <Project
                     name="CodeSpecs"
                     date="2022 - 2023"
                     info="made for my university dissertation, a full-stack web application written with typescript which leverages the debug adapter protocol to produce animated visualisations of real code"

@@ -2,7 +2,7 @@ use portfolio::*;
 
 use std::sync::mpsc;
 
-use leptos::*;
+use leptos::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
@@ -17,7 +17,7 @@ fn main() {
         scene::scene(receiver).await;
     });
     //mount our `leptos` app
-    leptos::mount_to_body(|cx| {
-        view! { cx, <App sender=sender/> }
+    leptos::mount::mount_to_body(|| {
+        view! { <App sender=sender /> }
     });
 }

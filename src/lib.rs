@@ -12,26 +12,31 @@ use crate::routes::projects::*;
 use crate::routes::*;
 
 pub mod config;
-pub mod clouds;
+pub mod effect;
 use crate::config::Theme;
 
-use leptos::*;
+use leptos::prelude::*;
 
 use std::sync::mpsc;
 
-
 #[component]
-pub fn App(cx: Scope, sender: mpsc::Sender<scene::SceneStateMessage>
-    ) -> impl IntoView {
+pub fn App(sender: mpsc::Sender<scene::SceneStateMessage>) -> impl IntoView {
     let window = web_sys::window().expect("to have window");
-    let (theme, set_theme) = create_signal(
-        cx,
+    let (theme, set_theme) = signal(
         // remember what the user chose in local storage
-        match window.local_storage().unwrap().unwrap().get("theme").unwrap().as_deref() {
+        match window
+            .local_storage()
+            .unwrap()
+            .unwrap()
+            .get("theme")
+            .unwrap()
+            .as_deref()
+        {
             Some("Dark") => Theme::Dark,
             Some("Light") => Theme::Light,
             // if we don't have a local storage option, use prefers-color-scheme
-            _ => {if window
+            _ => {
+                if window
                     .match_media("(prefers-color-scheme: dark)")
                     .expect("media queries")
                     .unwrap()
@@ -42,43 +47,47 @@ pub fn App(cx: Scope, sender: mpsc::Sender<scene::SceneStateMessage>
                     Theme::Light
                 }
             }
-        }
+        },
     );
 
-    provide_context(cx, (theme, set_theme));
-    provide_context(cx, sender.clone());
+    provide_context((theme, set_theme));
+    provide_context(sender.clone());
 
-    create_effect(cx, move |_| {
+    Effect::new(move |_| {
         sender
             .send(scene::SceneStateMessage::SetTheme(theme.get()))
             .unwrap();
-        let _ = window.local_storage().unwrap().unwrap().set("theme", &format!("{:?}", theme.get()));
+        let _ = window
+            .local_storage()
+            .unwrap()
+            .unwrap()
+            .set("theme", &format!("{:?}", theme.get()));
         if let Some(document) = window.document() {
             if let Some(body) = document.body() {
                 body.set_class_name(match theme.get() {
                     Theme::Light => "",
-                    Theme::Dark => "dark"
+                    Theme::Dark => "dark",
                 })
             }
         }
     });
 
-    view! { cx,
+    view! {
         <div class="text-sky-900 dark:text-sky-100 flex font-mono">
             <Router>
-                <Bar/>
+                <Bar />
                 <div class="flex flex-col grow">
                     <Route path="/">
-                        <Home/>
+                        <Home />
                     </Route>
                     <Route path="/about">
-                        <About/>
+                        <About />
                     </Route>
                     <Route path="/projects">
-                        <Projects/>
+                        <Projects />
                     </Route>
                     <Route path="/contact">
-                        <Contact/>
+                        <Contact />
                     </Route>
                 </div>
             </Router>

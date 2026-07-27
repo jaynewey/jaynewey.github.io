@@ -1,19 +1,21 @@
+use rand::Rng;
 use three_d::*;
 use three_d_asset::io::load_async;
-use rand::Rng;
 
 pub async fn get_clouds(context: &Context, paths: &[&str]) -> Vec<Gm<Sprites, ColorMaterial>> {
-    let mut cloud_assets = load_async(paths)
-    .await
-    .unwrap();
+    let mut cloud_assets = load_async(paths).await.unwrap();
 
-    paths 
+    paths
         .iter()
         .map(|path| {
-            let name = std::path::Path::new(&path).file_name().unwrap().to_str().unwrap();
+            let name = std::path::Path::new(&path)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap();
             let cloud = cloud_assets.deserialize(name).unwrap();
             let material = ColorMaterial {
-                color: Color::WHITE,
+                color: Srgba::WHITE,
                 texture: Some(std::sync::Arc::new(Texture2D::new(context, &cloud)).into()),
                 is_transparent: true,
                 render_states: RenderStates {
@@ -35,7 +37,7 @@ pub async fn get_clouds(context: &Context, paths: &[&str]) -> Vec<Gm<Sprites, Co
                 })
                 .collect();
             let mut sprites = Sprites::new(context, &cloud_positions, None);
-            sprites.set_transformation(Matrix4::from_scale(30.0));
+            sprites.set_transformation(Matrix4::from_scale(rng.gen_range(20.0..50.0)));
 
             Gm {
                 geometry: sprites,

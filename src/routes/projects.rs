@@ -1,10 +1,16 @@
-use leptos::*;
-use leptos_icons::*;
-use icondata_ch::ChIcon::{ChGithub, ChLinkExternal};
+use icondata::{ChGithub, ChLinkExternal};
+use leptos::prelude::*;
+use leptos_icons::Icon;
 
 #[component]
-fn Project(cx: Scope, name: &'static str, date: &'static str, info: &'static str, link: Option<&'static str>, repo: Option<&'static str>) -> impl IntoView {
-    view! { cx,
+fn Project(
+    name: &'static str,
+    date: &'static str,
+    info: &'static str,
+    link: Option<&'static str>,
+    repo: Option<&'static str>,
+) -> impl IntoView {
+    view! {
         <li class="flex flex-col backdrop-blur-md p-4 rounded-lg snap-start">
             <div class="flex flex-row">
                 <h3 class="font-bold text-xl mb-4">{name}</h3>
@@ -14,7 +20,7 @@ fn Project(cx: Scope, name: &'static str, date: &'static str, info: &'static str
             <div class="flex flex-row gap-x-4 pt-4 ml-auto">
                 {link
                     .map(|link| {
-                        view! { cx,
+                        view! {
                             <a
                                 href=link
                                 target="_blank"
@@ -25,7 +31,7 @@ fn Project(cx: Scope, name: &'static str, date: &'static str, info: &'static str
                         }
                     })} {repo
                     .map(|repo| {
-                        view! { cx,
+                        view! {
                             <a
                                 href=repo
                                 target="_blank"
@@ -41,13 +47,20 @@ fn Project(cx: Scope, name: &'static str, date: &'static str, info: &'static str
 }
 
 #[component]
-pub fn Projects(cx: Scope) -> impl IntoView {
-    view! { cx,
+pub fn Projects() -> impl IntoView {
+    view! {
         <div class="h-screen w-full snap-start flex flex-col lg:flex-row lg:flex-row-reverse">
             <div class="flex lg:w-1/2 lg:mr-6 p-6">
                 <h2 class="font-bold text-6xl lg:text-8xl lg:m-auto">"projects"</h2>
             </div>
             <div class="overflow-y-auto space-y-6 m-6 md:m-12">
+                <Project
+                    name="Ante 0"
+                    date="2026"
+                    info="ante 0 is a guessing game for jokers from the video game balatro, created using vue and typescript"
+                    link=Some("https://jaynewey.github.io/ante-0")
+                    repo=Some("https://github.com/jaynewey/ante-0")
+                />
                 <Project
                     name="CodeSpecs"
                     date="2022 - 2023"

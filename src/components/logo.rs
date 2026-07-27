@@ -1,9 +1,9 @@
-use leptos::*;
+use leptos::prelude::*;
 
 #[component]
-pub fn Logo(cx: Scope) -> impl IntoView {
+pub fn Logo() -> impl IntoView {
     // TODO: reduce duplication between this as index.html
-    view! { cx,
+    view! {
         <svg width="36" height="36" version="1.1" viewBox="0 0 68.184 70.245">
             <g transform="translate(-6.355 -5.3051)">
                 <path

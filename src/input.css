@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* tell tailwind we'll handle dark mode manually */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-mono: "Space Mono", monospace;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("SpaceMono-Regular.ttf");
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("SpaceMono-Bold.ttf");
+  font-weight: bold;
+}
+
+*::-webkit-scrollbar {
+  width: 3px;
+}
+ 
+*::-webkit-scrollbar-thumb {
+  background: #0c4a6e;
+  border-radius: 6px;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: #e0f2fe;
+}
+
+*::-webkit-scrollbar-track {
+		background: rgba(255, 255, 255, 0);
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}

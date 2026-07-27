@@ -1,4 +1,4 @@
-use three_d::Color;
+use three_d::Srgba;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Theme {
@@ -6,27 +6,27 @@ pub enum Theme {
     Dark,
 }
 
-pub const SUN: Color = Color {
+pub const SUN: Srgba = Srgba {
     r: 255,
     g: 251,
     b: 235,
     a: 255,
 };
 
-pub const MOON: Color = Color {
+pub const MOON: Srgba = Srgba {
     r: 153,
     g: 246,
     b: 228,
     a: 255,
 };
 
-pub const BACKGROUND_LIGHT: Color = Color {
+pub const BACKGROUND_LIGHT: Srgba = Srgba {
     r: 186,
     g: 230,
     b: 253,
     a: 255,
 };
-pub const BACKGROUND_DARK: Color = Color {
+pub const BACKGROUND_DARK: Srgba = Srgba {
     r: 30,
     g: 41,
     b: 59,

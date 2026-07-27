@@ -1,14 +1,14 @@
-use leptos::*;
-use leptos_icons::*;
-use icondata_ch::ChIcon::{ChMoon, ChSun};
 use crate::config::Theme;
+use icondata::{ChMoon, ChSun};
+use leptos::prelude::*;
+use leptos_icons::Icon;
 
 #[component]
-pub fn ThemeButton(cx: Scope) -> impl IntoView {
+pub fn ThemeButton() -> impl IntoView {
     let (theme, set_theme) =
-        use_context::<(ReadSignal<Theme>, WriteSignal<Theme>)>(cx).expect("to find theme context");
+        use_context::<(ReadSignal<Theme>, WriteSignal<Theme>)>().expect("to find theme context");
 
-    view! { cx,
+    view! {
         <button
             on:click=move |_| {
                 set_theme
@@ -23,10 +23,10 @@ pub fn ThemeButton(cx: Scope) -> impl IntoView {
         >
             {move || match theme.get() {
                 Theme::Light => {
-                    view! { cx, <Icon icon=ChSun/> }
+                    view! { <Icon icon=ChSun/> }
                 }
                 Theme::Dark => {
-                    view! { cx, <Icon icon=ChMoon/> }
+                    view! { <Icon icon=ChMoon/> }
                 }
             }}
         </button>

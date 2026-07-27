@@ -1,7 +1,7 @@
 /target
 
-# railwind generated css
-railwind.css
+# tailwind generated css
+tailwind.css
 
 # built app
 /dist

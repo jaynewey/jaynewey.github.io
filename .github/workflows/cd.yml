@@ -24,7 +24,9 @@ jobs:
       - name: Install and Build
         run: |
           cargo install trunk
-          cargo install railwind_cli
+          curl -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.18/tailwindcss-linux-x64 -o tailwindcss
+          chmod +x tailwindcss
+          mv tailwindcss /usr/local/bin/
           ASSET_PREFIX="https://jaynewey.github.io/" trunk build --release
           touch ./dist/.nojekyll
           cp ./dist/index.html ./dist/404.html
